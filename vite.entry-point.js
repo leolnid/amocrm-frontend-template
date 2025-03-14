@@ -28,11 +28,6 @@ const entryPoint = ({pattern = '', mode = 'local', prefix = true}) => ({
         for (const file of files) {
             let replaced = (getFileContent(file, mode === 'local')?.toString())
 
-            // Удаление комментариев
-            replaced = replaced
-                .replace(/([^:])\/\/.*?((\n)|(\r)|(\n\r)|(\r\n))/ig, '$1')
-                .replace(/(\/\*.*?\*\/)/g, '');
-
             // Добавление дат сборки
             replaced = replaced
                 .replace(/\{build_date}/g, (new Date()).toString())

@@ -11,7 +11,16 @@ export default defineConfig(({mode}) => {
     return {
         build: {
             sourcemap: !isProduction,
-            minify: isProduction,
+            minify: isProduction ? 'terser' : false,
+            terserOptions: {
+                compress: {
+                    drop_console: true,
+                    drop_debugger: true,
+                },
+                format: {
+                    comments: false,
+                },
+            },
             target: 'es2015',
             lib: {
                 entry: 'src/App.ts',

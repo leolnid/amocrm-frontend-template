@@ -1,17 +1,21 @@
-import {AmoWidget} from "./Interfaces/AmoWidget.ts";
-import $ from "jquery"
+import {AmoWidget} from "../types.ts";
+import WidgetNotifications from "./notifications/WidgetNotifications.ts";
+import WidgetPageModifier from "./page/WidgetPageModifier.ts";
+import {BaseSingleton} from "../BaseSingleton.ts";
 
-export class BaseApp<T extends Record<string, any>> {
-    protected amoWidget: AmoWidget<T>;
-    protected mode: string;
+export default class BaseWidget<T extends Record<string, any> = {}> extends BaseSingleton<BaseWidget<T>> {
+    amoWidget: AmoWidget<T>;
+    protected readonly mode: string;
     styleFile = 'style.css';
-    readonly version = '0.0.2';
-    readonly production: boolean = true;
-
-    constructor(amoWidget: AmoWidget<T>, mode: string) {
+    readonly version = '1.0.0';
+    readonly production = true;
+    backendDomain: string = '';
+    //
+    protected constructor(amoWidget: AmoWidget<T>, mode: string) {
+        if (!amoWidget) throw new Error('param amoWidget is required for BaseWidget');
+        super();
         this.amoWidget = amoWidget;
         this.mode = mode;
-        this.production = (mode === 'production');
     }
 
     public getCallbacks(): Record<string, () => boolean | unknown> {
@@ -26,6 +30,7 @@ export class BaseApp<T extends Record<string, any>> {
             onSave: 'Save',
             destroy: 'Destroy',
             onAddAsSource: 'AddAsSource',
+            initMenuPage: 'InitMenuPage',
         }
 
         return Object.fromEntries(Object.entries(methodsMap)
@@ -37,26 +42,22 @@ export class BaseApp<T extends Record<string, any>> {
                         ? (self[baseCallbackName] as () => any).bind(self)
                         : self.defaultCallback.bind(self);
 
-                const newCallback = () => {
+                const newCallback = (...args: any[]) => {
                     this.onBeforeCallback.bind(self)();
-                    if (typeof self[defaultCallbackName] === 'function') (self[defaultCallbackName] as () => any).bind(self)();
-                    return originalCallback();
+                    //@ts-ignore
+                    if (typeof self[defaultCallbackName] === 'function') (self[defaultCallbackName] as () => any).bind(self)(...args);
+                    //@ts-ignore
+                    return originalCallback(...args);
                 };
 
                 return [key, newCallback];
             }))
     }
-
-    private addStyleSheet(name?: string) {
-        $('head').append(
-            `<link type="text/css" rel="stylesheet" href="${this.getPath()}/${
-                name ?? this.styleFile
-            }?v=${this.production ? this.getVersion() : Date.now()}" >`
-        );
-    }
-
+    //
     private onBeforeCallback() {
-        this.addStyleSheet();
+        WidgetPageModifier.addStyleSheet();
+        WidgetNotifications.I.getRemoteNotifications();
+        WidgetNotifications.I.showNotifications();
     }
 
     public defaultCallback(): boolean {
@@ -70,13 +71,16 @@ export class BaseApp<T extends Record<string, any>> {
         return this.amoWidget.render({ref: `/tmpl/controls/${template}.twig`}, params);
     };
 
-    public getCode(): string {
+    public get code(): string {
         return this.amoWidget.params.widget_code;
     }
-    public getPath(): string {
+    public get path(): string {
         return this.amoWidget.params.path;
     }
-    public getVersion(): string {
-        return this.version ?? '0.0.1'
+    public get name(): string {
+        return this.amoWidget.langs.widget.name
+    }
+    public get $ajax(): typeof $.ajax {
+        return this.amoWidget.$authorizedAjax.bind(this.amoWidget);
     }
 }

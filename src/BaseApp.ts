@@ -1,14 +1,14 @@
 import {AmoWidget} from "./Interfaces/AmoWidget.ts";
 import $ from "jquery"
 
-export class BaseApp {
-    protected amoWidget: AmoWidget;
+export class BaseApp<T extends Record<string, any>> {
+    protected amoWidget: AmoWidget<T>;
     protected mode: string;
     styleFile = 'style.css';
     readonly version = '0.0.2';
     readonly production: boolean = true;
 
-    constructor(amoWidget: AmoWidget, mode: string) {
+    constructor(amoWidget: AmoWidget<T>, mode: string) {
         this.amoWidget = amoWidget;
         this.mode = mode;
         this.production = (mode === 'production');
@@ -30,8 +30,8 @@ export class BaseApp {
 
         return Object.fromEntries(Object.entries(methodsMap)
             .map(([key, callback]) => {
-                const baseCallbackName = ('on' + callback) as keyof BaseApp;
-                const defaultCallbackName = ('onBefore' + callback) as keyof BaseApp;
+                const baseCallbackName = ('on' + callback) as keyof typeof this;
+                const defaultCallbackName = ('onBefore' + callback) as keyof typeof this;
                 const originalCallback =
                     typeof self[baseCallbackName] === "function"
                         ? (self[baseCallbackName] as () => any).bind(self)

@@ -1,4 +1,4 @@
-export interface AmoWidget {
+export interface AmoWidget<T extends Record<string, any> = {}> {
     modal: {
         $el: JQuery,
         $modal: JQuery
@@ -9,7 +9,7 @@ export interface AmoWidget {
         oauth_client_uuid: string,
         widget_code: string,
         path: string,
-    }
+    } & T,
     $authorizedAjax: (data: {url: string, [p: string]: any}) => unknown,
     render: (data: {ref: string}, params?: Record<string | number, unknown>) => string,
 }

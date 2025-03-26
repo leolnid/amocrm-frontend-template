@@ -15,7 +15,8 @@
     "twig": "^1.16.0",
     "typescript": "^5.0.2",
     "vite": "6.0.9",
-    "terser": "^5.39.0"
+    "terser": "^5.39.0",
+    "@types/jquery": "^3.5.32"
   },
   "dependencies": {
     "vite-plugin-static-copy": "^0.17.0",

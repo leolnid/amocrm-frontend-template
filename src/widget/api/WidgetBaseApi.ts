@@ -34,7 +34,7 @@ export class WidgetBaseApi extends BaseSingleton<WidgetBaseApi> {
 
     protected _requestFunc: typeof $.ajax = $.ajax;
 
-    static #makeHeaders(headers?: Record<string, string>, cors = true): Record<string, string> {
+    static #makeHeaders(headers?: Record<string, string>, cors = false): Record<string, string> {
         const corsHeaders: Record<string, string> = cors ? {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Headers': 'Content-Type, Origin, Accept, Authorization, Content-Length, X-Requested-With, X-Auth-Token',
@@ -51,7 +51,7 @@ export class WidgetBaseApi extends BaseSingleton<WidgetBaseApi> {
         headers?: Record<string, string>,
         contentType = 'application/json',
         dataType = 'json',
-        cors= true
+        cors?: boolean
     ): Promise<T> {
         const queryString = WidgetBaseApi.#createQueryString(query);
         const url = path + (queryString ? (path.includes('?') ? '&' : '?') + queryString : '');

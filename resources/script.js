@@ -7,7 +7,7 @@ define([`./scripts/App.js?cache=${Date.now()}`], function (app) {
         self.system = this.system();
         self.langs = this.langs;
 
-        self.app = new app(self, 'production');
+        self.app = app.instance(self, 'production');
         self.callbacks = self.app.getCallbacks();
 
         console.debug('Собрали callbacks: ' + Object.keys(self.callbacks));

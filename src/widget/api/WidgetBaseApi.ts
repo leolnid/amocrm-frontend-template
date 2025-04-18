@@ -58,7 +58,7 @@ export class WidgetBaseApi extends BaseSingleton<WidgetBaseApi> {
         const requestHeaders = WidgetBaseApi.#makeHeaders(headers, cors);
         const data = contentType === 'application/json' ? JSON.stringify(body) : body;
 
-        return new Promise<T>(resolve => this._requestFunc({
+        return new Promise<T>((resolve, reject) => this._requestFunc({
             url,
             type: method,
             contentType,
@@ -66,14 +66,14 @@ export class WidgetBaseApi extends BaseSingleton<WidgetBaseApi> {
             dataType,
             data,
             success: function (data: ResponseBody<T>/*, statusText: string, xhr: JQueryXHR*/) {
-                if (data === undefined) throw new ApiError('Получили пустой ответ от сервера', 404);
+                if (data === undefined) return reject(new ApiError('Получили пустой ответ от сервера', 404));
                 // @ts-ignore
-                if (!data.success || !('data' in data)) throw new ApiError(data.data?.message ?? 'Неизвестная ошибка');
+                if (!data.success || !('data' in data)) return reject(new ApiError(data.data?.message ?? `Неизвестная ошибка`));
                 resolve(data.data as T);
             },
             //@ts-ignore
         }).fail(function (request: { status: number, responseJSON?: ResponseBody }, status: string, error: string) {
-            throw new ApiError(request.responseJSON?.data?.message ?? error ?? `Неизвестная ошибка`, request.status)
+            reject(new ApiError(request.responseJSON?.data?.message ?? error ?? `Неизвестная ошибка`, request.status));
         }));
     }
     get = async <T>(

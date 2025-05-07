@@ -139,5 +139,5 @@ export class WidgetDomainApi extends WidgetAuthorizedApi {
         contentType?: string,
         dataType?: string,
         cors?: boolean
-    ) => WidgetBaseApi.I.request<T>(method, App.I.backendDomain + path, query, body, headers, contentType, dataType, cors);
+    ) => super.request<T>(method, App.I.backendDomain + path, query, body, headers, contentType, dataType, cors);
 }

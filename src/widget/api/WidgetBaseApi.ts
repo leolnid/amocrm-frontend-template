@@ -40,7 +40,7 @@ export class WidgetBaseApi extends BaseSingleton<WidgetBaseApi> {
             'Access-Control-Allow-Headers': 'Content-Type, Origin, Accept, Authorization, Content-Length, X-Requested-With, X-Auth-Token',
             'Access-Control-Allow-Methods': 'POST, GET, PATCH, DELETE, OPTIONS'
         } : {};
-        return { ...corsHeaders, ...headers };
+        return { ...corsHeaders, ...headers, ...{'X-Timezone-Offset': `${new Date().getTimezoneOffset()}`} };
     }
 
     public async request<T>(
@@ -57,6 +57,7 @@ export class WidgetBaseApi extends BaseSingleton<WidgetBaseApi> {
         const url = path + (queryString ? (path.includes('?') ? '&' : '?') + queryString : '');
         const requestHeaders = WidgetBaseApi.#makeHeaders(headers, cors);
         const data = contentType === 'application/json' ? JSON.stringify(body) : body;
+
 
         return new Promise<T>((resolve, reject) => this._requestFunc({
             url,
@@ -76,51 +77,36 @@ export class WidgetBaseApi extends BaseSingleton<WidgetBaseApi> {
             reject(new ApiError(request.responseJSON?.data?.message ?? error ?? `Неизвестная ошибка`, request.status));
         }));
     }
-    get = async <T>(
-        path: string,
-        query?: object,
-        headers?: Record<string, string>,
-        contentType?: string,
-        dataType?: string,
-        cors?: boolean
-    ): Promise<T> => this.request<T>(RequestType.GET, path, query, undefined, headers, contentType, dataType, cors);
-    post = async <T>(
-        path: string,
-        query?: object,
-        body?: any,
-        headers?: Record<string, string>,
-        contentType?: string,
-        dataType?: string,
-        cors?: boolean
-    ): Promise<T> => this.request<T>(RequestType.POST, path, query, body, headers, contentType, dataType, cors);
-    put = async <T>(
-        path: string,
-        query?: object,
-        body?: any,
-        headers?: Record<string, string>,
-        contentType?: string,
-        dataType?: string,
-        cors?: boolean
-    ): Promise<T> => this.request<T>(RequestType.PUT, path, query, body, headers, contentType, dataType, cors);
-    patch = async <T>(
-        path: string,
-        query?: object,
-        body?: any,
-        headers?: Record<string, string>,
-        contentType?: string,
-        dataType?: string,
-        cors?: boolean
-    ): Promise<T> => this.request<T>(RequestType.PATCH, path, query, body, headers, contentType, dataType, cors);
-    del = async <T>(
-        path: string,
-        query?: object,
-        body?: any,
-        headers?: Record<string, string>,
-        contentType?: string,
-        dataType?: string,
-        cors?: boolean
-    ): Promise<T> => this.request<T>(RequestType.DEL, path, query, body, headers, contentType, dataType, cors);
+
+    static get get() {
+        return <T>(
+            path: string,
+            query?: object,
+            headers?: Record<string, string>,
+            contentType?: string,
+            dataType?: string,
+            cors?: boolean
+        ) => this.I.request<T>(RequestType.GET, path, query, undefined, headers, contentType, dataType, cors);
+    }
+
+    static get post() { return this.postWith(RequestType.POST); }
+    static get put() { return this.postWith(RequestType.PUT); }
+    static get patch() { return this.postWith(RequestType.PATCH); }
+    static get del() { return this.postWith(RequestType.DEL); }
+
+    private static postWith(method: RequestType) {
+        return <T>(
+            path: string,
+            query?: object,
+            body?: any,
+            headers?: Record<string, string>,
+            contentType?: string,
+            dataType?: string,
+            cors?: boolean
+        ) => this.I.request<T>(method, path, query, body, headers, contentType, dataType, cors);
+    }
 }
+
 
 export class WidgetAuthorizedApi extends WidgetBaseApi {
     protected constructor() {
@@ -139,5 +125,21 @@ export class WidgetDomainApi extends WidgetAuthorizedApi {
         contentType?: string,
         dataType?: string,
         cors?: boolean
-    ) => super.request<T>(method, App.I.backendDomain + path, query, body, headers, contentType, dataType, cors);
+    ) => {
+        console.debug(App.I);
+        return super.request<T>(method, App.I.backendDomain + path, query, body, headers, contentType, dataType, cors);
+    }
+}
+
+export class WidgetAmocrmApi extends WidgetAuthorizedApi {
+    public request = async <T>(
+        method: RequestType,
+        path: string,
+        query?: object,
+        body?: any,
+        headers?: Record<string, string>,
+        contentType?: string,
+        dataType?: string,
+        cors?: boolean
+    ) => super.request<T>(method, window.origin + path, query, body, headers, contentType, dataType, cors);
 }

@@ -32,7 +32,7 @@ export default class WidgetNotifications<T = INotification> extends BaseSingleto
         if (!WidgetLocalStorage.isLocalDataExpired(WidgetLocalStorage.get('notifications'), 1, 'h')) return [];
         WidgetLocalStorage.set('notifications');
         try {
-            const n = await WidgetDomainApi.I.get<T[]>(this.path);
+            const n = await WidgetDomainApi.get<T[]>(this.path);
             this.pushNotifications(...n);
             return n;
         } catch (err) {
@@ -70,7 +70,7 @@ export default class WidgetNotifications<T = INotification> extends BaseSingleto
             notificationComponent: self.component,
             onHide(id: string | number) {
                 try {
-                    WidgetDomainApi.I.post(self.path + '/' + id);
+                    WidgetDomainApi.post(self.path + '/' + id);
                 } catch (err) {
                     console.error(err);
                 }
